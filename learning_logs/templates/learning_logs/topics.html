@@ -1,0 +1,24 @@
+{% extends "learning_logs/base.html" %}
+
+{% block content %}
+
+    <p>Topics</p>
+
+    
+    
+    <ul>
+        <!-- for loop to loop thru each topic
+        NOTE: not like python, needs a endfor-->
+        {% for topic in topics %}
+        
+        <!-- To print a variable in a template, wrap the 
+        variable name in double braces-->
+        <li>
+            <a href="{% url 'learning_logs:topic' topic.id %}">{{ topic }}</a>
+        </li> <!-- li - list item-->
+        {% empty %} <!-- if the list is empty then display message -->
+         <li>No topics have been added yet.</li>
+        {% endfor %}
+    </ul>
+
+{% endblock content %}
