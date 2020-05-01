@@ -74,3 +74,22 @@ def new_entry(request,topic_id):
 
     context = {'form': form, 'topic': topic}
     return render(request, 'learning_logs/new_entry.html', context)
+
+def edit_entry(request, entry_id):
+    # Edit an existing entry
+    entry = Entry.objects.get(id=entry_id)
+    topic = entry.topic
+
+    if request.method != 'POST':
+        # this argument tells Django to create the form prefilled
+        # with information from the existing entry object
+        form = EntryForm(instance=entry)
+    else:
+        # POST data submitted; process data
+        form = EntryForm(instance=entry, data=request.POST)
+        if form.is_valid(): # to make sure there's no malicious code
+            form.save() # save it
+            return redirect('learning_logs:topic', topic_id= topic.id) # we'll be redirected to the topics page
+    
+    context = {'entry': entry, 'topic': topic, 'form': form}
+    return render(request, 'learning_logs/edit_entry.html', context) # it renders the page based on the dictionary called context
