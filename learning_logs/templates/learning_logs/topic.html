@@ -10,15 +10,19 @@
         <li>
             <!-- a vertical line (|) represents a template filter
             -a function that modifies the value in a template variable-->
-            <p>{{ entry.date_added|date:'M d, Y H:i' }}</p>
+            <p>{{ entry.date_added|date:'M d, Y H:i' }}</p> <!--accessing Entry class, date_added-->
             <!--The filter linebreaks ensures that long text entries include line breaks-->
             <p>{{ entry.text|linebreaks }} </p>
 
 
         </li>
         {% empty %} <!-- if the list is empty then display message -->
-         <li> There are no entries for this topic yet</li>
+         <li> There are no entries for this topic yet.</li>
         {% endfor %}
     </ul>
+
+    <p>
+        <a href="{% url 'learning_logs:new_entry' topic.id %}">Add new entry</a>
+    </p>
 
 {% endblock content %}
