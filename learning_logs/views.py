@@ -2,6 +2,8 @@ from django.shortcuts import render, redirect
 # from .forms import TopicForm, EntryForm
 from .forms import TopicForm, EntryForm
 from .models import Topic, Entry
+from django.contrib.auth.decorators import login_required
+from django.http import Http404
 # Create your views here.
 
 # When a URL request matches the pattern we just defined,
@@ -11,9 +13,11 @@ def index(request):
     """The home page for Learning Log."""
     return render(request, 'learning_logs/index.html')
 
+@login_required
 def topics(request):
-    topics = Topic.objects.order_by('date_added')
-    #a context is a dictionary in which the keys are names we'll use
+    # Show all topics
+    topics = Topic.objects.filter(owner=request.user).order_by('date_added') #query to get only Topic objs from DB whose 
+    #a context is a dictionary in which the keys are names we'll use         owner attribute matches current user
     # in the template to access the data, and the values are the data
     # we need to send to the template. In this case, there's one key-value pair
     # which contains the set of topics we'll display on the page
@@ -22,15 +26,20 @@ def topics(request):
     # as well as the request object and the path to the template
     return render(request, 'learning_logs/topics.html', context)
 
+@login_required
 def topic(request, topic_id):
     #just like we did in MyShell.py
     topic = Topic.objects.get(id=topic_id)
+    # Make sure the topic belongs to the current user
+    if topic.owner != request.user:
+        raise Http404
     # foreign key can be accessed using '_set'
     entries = topic.entry_set.order_by('-date_added')
     context = {'topic':topic, 'entries':entries}
 
     return render(request, 'learning_logs/topic.html', context)
 
+@login_required
 def new_topic(request):
     if request.method != 'POST':
         # No data submitted; create a blank form (create an instance of TopicForm)
@@ -47,7 +56,9 @@ def new_topic(request):
         # matches the field types expected
         if form.is_valid():
             # write the data from the form to the DB
-            form.save()
+            new_topic = form.save(commit=False)
+            new_topic.owner = request.user
+            new_topic.save()
             # redirect the user's browser to the topics page
             return redirect('learning_logs:topics')
     
@@ -55,6 +66,7 @@ def new_topic(request):
     context = {'form': form}
     return render(request, 'learning_logs/new_topic.html', context)
 
+@login_required
 def new_entry(request,topic_id):
     topic = Topic.objects.get(id=topic_id) # getting the topic based on topic_id
     if request.method != 'POST': #if its a get method
@@ -75,10 +87,14 @@ def new_entry(request,topic_id):
     context = {'form': form, 'topic': topic}
     return render(request, 'learning_logs/new_entry.html', context)
 
+@login_required
 def edit_entry(request, entry_id):
     # Edit an existing entry
     entry = Entry.objects.get(id=entry_id)
     topic = entry.topic
+
+    if topic.owner != request.user:
+        raise Http404
 
     if request.method != 'POST':
         # this argument tells Django to create the form prefilled
